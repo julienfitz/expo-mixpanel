@@ -4,6 +4,20 @@
 #
 version: 2.1
 jobs:
+  checkout_git:
+    docker:
+      - image: circleci/node:12.18.3
+    working_directory: ~/circleci-expo-mixpanel
+    steps:
+      - restore_cache:
+          name: Checkout Code
+          key: git-source-other-{{ .Branch }}-{{ .Revision }}
+      - checkout
+      - save_cache:
+          key: git-source-other-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - ".git"
+
   yarn_install:
     docker:
       - image: circleci/node:12.18.3
@@ -49,6 +63,11 @@ workflows:
   version: 2.1
   run_tests:
     jobs:
+      - checkout_git
+      - yarn_install:
+          requires:
+            - checkout_git
       - yarn_test:
           requires:
+            - checkout_git
             - yarn_install
