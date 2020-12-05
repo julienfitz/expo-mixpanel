@@ -58,7 +58,7 @@ export default class ExpoMixpanel {
    * @public
    */
   track = (name, props, operation) => {
-    if (MIXPANEL_TOKEN) {
+    if (this.token) {
       const queueLength = this.queue.push({
         name,
         props
@@ -79,7 +79,7 @@ export default class ExpoMixpanel {
    * @public
    */
   identify = async (userId) => {
-    if (MIXPANEL_TOKEN) {
+    if (this.token) {
       this.userId = userId
       this._pushEvent({ name: '$identify' }, 'create-identity')
     } else {
@@ -95,7 +95,7 @@ export default class ExpoMixpanel {
    * @public
    */
   reset = async () => {
-    if (MIXPANEL_TOKEN) {
+    if (this.token) {
       await this.identify(this.clientId)
     } else {
       this._fakeMixpanel(`reset: ${this.clientId}`)
@@ -112,7 +112,7 @@ export default class ExpoMixpanel {
    * @public
    */
   people = (operation, props) => {
-    if (MIXPANEL_TOKEN) {
+    if (this.token) {
       this._people(operation, props)
     } else {
       this._fakeMixpanel(`${operation}: ${props}`)
@@ -129,7 +129,7 @@ export default class ExpoMixpanel {
    * @public
    */
   group = (operation, props) => {
-    if (MIXPANEL_TOKEN) {
+    if (this.token) {
       this._group(operation, props)
     } else {
       this._fakeMixpanel(`${operation}: ${props}`)

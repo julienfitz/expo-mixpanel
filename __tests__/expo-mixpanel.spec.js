@@ -1,5 +1,5 @@
 /* global fetch */
-import ExpoMixpanel from 'src/mixpanel'
+import ExpoMixpanel from '../src/expo-mixpanel'
 import Constants from 'expo-constants'
 
 describe('Mixpanel', () => {
@@ -24,25 +24,8 @@ describe('Mixpanel', () => {
   }
 
   beforeEach(async () => {
-    store = {
-      currentFacility: {
-        id: 3,
-        name: 'Cannademo West'
-      },
-      currentOrganization: {
-        id: 5,
-        name: 'Cannabis Inc.'
-      },
-      currentUser: {
-        id: 7
-      },
-      currentMembership: {
-        role: 'owner'
-      }
-    }
-
     setDefaultConstants()
-    mixpanelTracker = new ExpoMixpanel(store)
+    mixpanelTracker = new ExpoMixpanel('random-token-string')
     await mixpanelTracker.init()
   })
 
@@ -60,7 +43,7 @@ describe('Mixpanel', () => {
         expect(console.error).toHaveBeenCalledWith(error)
       })
 
-      it.only('calls other methods as expected', async () => {
+      it('calls other methods as expected', async () => {
         mixpanelTracker._pushEvent = jest.fn()
         mixpanelTracker._flush = jest.fn()
         await mixpanelTracker.track('Event Name', {}, 'live-event')
