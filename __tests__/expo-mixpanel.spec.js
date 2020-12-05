@@ -3,28 +3,9 @@ import ExpoMixpanel from '../src/expo-mixpanel'
 import Constants from 'expo-constants'
 
 describe('Mixpanel', () => {
-  let mixpanelTracker, store
-
-  const setDefaultConstants = () => {
-    Constants.getWebViewUserAgentAsync = jest.fn()
-    Constants.deviceId = 123
-    Constants.manifest = {
-      name: 'manifest name',
-      slug: 'manifest-name',
-      version: 1.0,
-      deviceName: 'Bob'
-    }
-    Constants.platform = {
-      ios: {
-        platform: 'ios',
-        model: 'XS',
-        systemVersion: 'who-cares'
-      }
-    }
-  }
+  let mixpanelTracker
 
   beforeEach(async () => {
-    setDefaultConstants()
     mixpanelTracker = new ExpoMixpanel('random-token-string')
     await mixpanelTracker.init()
   })
@@ -39,16 +20,20 @@ describe('Mixpanel', () => {
         const error =
           '\'nonexistent-operation\' is not a valid Mixpanel event tracking operation. This operation will not be tracked.'
         console.error = jest.fn()
-        await mixpanelTracker.track('Event Name', { one: 1 }, 'nonexistent-operation')
+        mixpanelTracker.track('Event Name', { one: 1 }, 'nonexistent-operation')
         expect(console.error).toHaveBeenCalledWith(error)
       })
 
-      it('calls other methods as expected', async () => {
-        mixpanelTracker._pushEvent = jest.fn()
+      it('calls _flush', () => {
         mixpanelTracker._flush = jest.fn()
-        await mixpanelTracker.track('Event Name', {}, 'live-event')
-        expect(mixpanelTracker._flush).toHaveBeenCalledWith(1, 'live-event')
-        expect(mixpanelTracker._pushEvent).toHaveBeenCalledWith('Event Name', 'live-event')
+        mixpanelTracker.track('Event Name', {}, 'live-event')
+        expect(mixpanelTracker._flush).toHaveBeenCalledWith('live-event')
+      })
+
+      it('calls _pushEvent', () => {
+        mixpanelTracker._pushEvent = jest.fn()
+        mixpanelTracker.track('Event Name', {}, 'live-event')
+        expect(mixpanelTracker._pushEvent).toHaveBeenCalledWith({'name': 'Event Name', 'props': {}, 'sent': true}, 'live-event')
       })
     })
 

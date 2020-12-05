@@ -29,6 +29,7 @@ export default class ExpoMixpanel {
    */
   init = async () => {
     this.clientId = Constants.deviceId
+    this.userId = this.clientId
     const userAgent = await Constants.getWebViewUserAgentAsync()
     this.userAgent = userAgent
     this.appName = Constants.manifest.name
@@ -59,11 +60,11 @@ export default class ExpoMixpanel {
    */
   track = (name, props, operation) => {
     if (this.token) {
-      const queueLength = this.queue.push({
+      this.queue.push({
         name,
         props
       })
-      this._flush(queueLength, operation)
+      this._flush(operation)
     } else {
       this._fakeMixpanel(`track: ${name}, ${props}`)
     }
