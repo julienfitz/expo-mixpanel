@@ -1,5 +1,3 @@
-export const MIXPANEL_TOKEN = 'your-token-here'
-
 export const MIXPANEL_API_URL = 'https://api.mixpanel.com'
 
 /**
@@ -9,7 +7,7 @@ export const MIXPANEL_API_URL = 'https://api.mixpanel.com'
  * @constant VALID_PROFILE_OPERATIONS
  * @type {Set}
  */
-export const VALID_PROFILE_OPERATIONS = new Set([
+const VALID_PROFILE_OPERATIONS = new Set([
   'profile-set',
   'profile-set-once',
   'profile-numerical-add',
@@ -27,7 +25,7 @@ export const VALID_PROFILE_OPERATIONS = new Set([
  * @constant VALID_GROUP_OPERATIONS
  * @type {Set}
  */
-export const VALID_GROUP_OPERATIONS = new Set([
+const VALID_GROUP_OPERATIONS = new Set([
   'group-set',
   'group-set-once',
   'group-unset',
@@ -43,10 +41,16 @@ export const VALID_GROUP_OPERATIONS = new Set([
  * @constant VALID_TRACK_OPERATIONS
  * @type {Set}
  */
-export const VALID_TRACK_OPERATIONS = new Set([
+const VALID_TRACK_OPERATIONS = new Set([
   'create-identity',
   'live-event',
   'live-event-deduplicate',
   'past-events-batch',
   'past-events'
 ])
+
+export const VALID_OPERATIONS = {
+  groups: VALID_GROUP_OPERATIONS,
+  engage: VALID_PROFILE_OPERATIONS,
+  track: VALID_TRACK_OPERATIONS
+}

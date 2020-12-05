@@ -5,9 +5,7 @@ import Constants from 'expo-constants'
 import { Buffer } from 'buffer'
 import {
   MIXPANEL_API_URL,
-  VALID_PROFILE_OPERATIONS,
-  VALID_GROUP_OPERATIONS,
-  VALID_TRACK_OPERATIONS
+  VALID_OPERATIONS
 } from './helpers'
 
 const { width, height } = Dimensions.get('window')
@@ -59,7 +57,7 @@ export default class ExpoMixpanel {
    * @public
    */
   track = (name, props, operation) => {
-    if (this.token) {
+    if (this.token && this.ready) {
       this.queue.push({
         name,
         props
@@ -79,10 +77,11 @@ export default class ExpoMixpanel {
    * @param userId {Number}
    * @public
    */
-  identify = async (userId) => {
-    if (this.token) {
+  identify = (userId) => {
+    if (this.token && this.ready) {
+      const data = this._configureEventData({ name: '$identify' })
       this.userId = userId
-      this._pushEvent({ name: '$identify' }, 'create-identity')
+      this._push(data, 'create-identity', 'track')
     } else {
       this._fakeMixpanel(`identify: ${userId}`)
     }
@@ -95,9 +94,9 @@ export default class ExpoMixpanel {
    * @method reset
    * @public
    */
-  reset = async () => {
-    if (this.token) {
-      await this.identify(this.clientId)
+  reset = () => {
+    if (this.token && this.ready) {
+      this.identify(this.clientId)
     } else {
       this._fakeMixpanel(`reset: ${this.clientId}`)
     }
@@ -113,7 +112,7 @@ export default class ExpoMixpanel {
    * @public
    */
   people = (operation, props) => {
-    if (this.token) {
+    if (this.token && this.ready) {
       this._people(operation, props)
     } else {
       this._fakeMixpanel(`${operation}: ${props}`)
@@ -130,7 +129,7 @@ export default class ExpoMixpanel {
    * @public
    */
   group = (operation, props) => {
-    if (this.token) {
+    if (this.token && this.ready) {
       this._group(operation, props)
     } else {
       this._fakeMixpanel(`${operation}: ${props}`)
@@ -163,12 +162,11 @@ export default class ExpoMixpanel {
    * @private
    */
   _flush = (operation) => {
-    if (this.ready) {
-      while (this.queue.length) {
-        const event = this.queue.pop()
-        this._pushEvent(event, operation)
-        event.sent = true
-      }
+    while (this.queue.length) {
+      const event = this.queue.pop()
+      const data = this._configureEventData(event)
+      this._push(data, operation, 'track')
+      event.sent = true
     }
   }
 
@@ -189,7 +187,7 @@ export default class ExpoMixpanel {
         ...props
       }
 
-      this._pushProfile(data, operation)
+      this._push(data, operation, 'engage')
     } else {
       console.error(`userId not found. ${operation} will not be tracked in Mixpanel.`)
     }
@@ -212,104 +210,43 @@ export default class ExpoMixpanel {
         ...props
       }
 
-      this._pushGroup(data, operation)
+      this._push(data, operation, 'groups')
     } else {
       console.error(`userId not found. ${operation} will not be tracked in Mixpanel.`)
     }
   }
 
   /**
-   * Validates operation and makes request to the Mixpanel API to track
-   * the event.
+   * Validates operation and endpoint, then makes request to the Mixpanel API to
+   * operate on data.
    *
-   * @method _pushEvent
-   * @param event {Object}
-   * @param operation {String}
-   * @private
-   */
-  _pushEvent = (event, operation) => {
-    if (this._trackOperationIsValid(operation)) {
-      let data = this._configureEventData(event)
-      data = Buffer.from(JSON.stringify(data)).toString('base64')
-
-      return fetch(`${MIXPANEL_API_URL}/track#${operation}?data=${data}`)
-    } else {
-      console.error(`'${operation}' is not a valid Mixpanel event tracking operation. This operation will not be tracked.`)
-    }
-  }
-
-  /**
-   * Validates operation and makes request to the Mixpanel API to
-   * operate on user profile data.
-   *
-   * @method _pushProfile
+   * @method _push
    * @param data {Object}
    * @param operation {String}
+   * @param endpoint {String}
    * @private
    */
-  _pushProfile = (data, operation) => {
-    if (this._profileOperationIsValid(operation)) {
+  _push = (data, operation, endpoint) => {
+    if (this._operationIsValid(operation, endpoint)) {
       data = Buffer.from(JSON.stringify(data)).toString('base64')
-      return fetch(`${MIXPANEL_API_URL}/engage#${operation}?data=${data}`)
+      return fetch(`${MIXPANEL_API_URL}/${endpoint}#${operation}?data=${data}`)
     } else {
-      console.error(`'${operation}' is not a valid Mixpanel profile operation. This operation will not be tracked.`)
-    }
-  }
-
-  /**
-   * Validates operation and makes request to the Mixpanel API to
-   * operate on group data.
-   *
-   * @method _pushGroup
-   * @param data {Object}
-   * @param operation {String}
-   * @private
-   */
-  _pushGroup = (data, operation) => {
-    if (this._groupOperationIsValid(operation)) {
-      data = Buffer.from(JSON.stringify(data)).toString('base64')
-      return fetch(`${MIXPANEL_API_URL}/groups#${operation}?data=${data}`)
-    } else {
-      console.error(`'${operation}' is not a valid Mixpanel group operation. This operation will not be tracked.`)
+      console.error(`'${operation}' is not a valid Mixpanel operation for the ${endpoint} endpoint. This operation will not be tracked.`)
     }
   }
 
   // VALIDATORS
 
   /**
-   * Validates user profile operations.
+   * Looks up the operation in relation to the endpoint to check for validity.
    *
-   * @method _profileOperationIsValid
+   * @method _operationIsValid
    * @param operation {String}
-   * @returns {Boolean}
+   * @param endpoint {String}
    * @private
    */
-  _profileOperationIsValid = (operation) => {
-    return VALID_PROFILE_OPERATIONS.has(operation)
-  }
-
-  /**
-   * Validates group operations.
-   *
-   * @method _groupOperationIsValid
-   * @param operation {String}
-   * @returns {Boolean}
-   * @private
-   */
-  _groupOperationIsValid = (operation) => {
-    return VALID_GROUP_OPERATIONS.has(operation)
-  }
-
-  /**
-   * Validates event tracking operations.
-   *
-   * @method _trackOperationIsValid
-   * @param operation {String}
-   * @returns {Boolean}
-   * @private
-   */
-  _trackOperationIsValid = (operation) => {
-    return VALID_TRACK_OPERATIONS.has(operation)
+  _operationIsValid = (operation, endpoint) => {
+    return VALID_OPERATIONS[endpoint].has(operation)
   }
 
   // DATA CONFIGURATION
