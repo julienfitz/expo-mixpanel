@@ -1,7 +1,54 @@
+# Javascript Node CircleCI 2.1 configuration file
+#
+# Check https://circleci.com/docs/2.1/language-javascript/ for more details
+#
 version: 2.1
-orbs:
-  node: circleci/node@3.0.0
+jobs:
+  yarn_install:
+    docker:
+      - image: circleci/node:12.18.3
+    working_directory: ~/circleci-expo-mixpanel
+    steps:
+      - restore_cache:
+          name: Checkout Code
+          key: git-source-{{ .Branch }}-{{ .Revision }}
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - yarn-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - yarn-dependencies-
+      - run: yarn install
+      - save_cache:
+          paths:
+            - node_modules
+          key: yarn-dependencies-{{ checksum "package.json" }}
+
+  yarn_test:
+    docker:
+      - image: circleci/node:12.18.3
+    working_directory: ~/circleci-portal-mobile
+    steps:
+      - restore_cache:
+          name: Checkout Code
+          key: git-source-{{ .Branch }}-{{ .Revision }}
+      - checkout
+      - restore_cache:
+          name: Yarn test
+          keys:
+          - yarn-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - yarn-dependencies-
+
+      # NOTE: Running with --runInBand option to deal with memory issues
+      # https://github.com/facebook/jest/issues/3630
+      - run: node node_modules/jest/bin/jest.js --runInBand --updateSnapshot
+
 workflows:
-  node-tests:
+  version: 2.1
+  run_tests:
     jobs:
-      - node/test
+      - yarn_test:
+          requires:
+            - yarn_install
