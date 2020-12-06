@@ -30,3 +30,8 @@ jobs:
           name: jest tests
           command: |
             yarn test
+
+      - run:
+          name: yarn lint
+          command: |
+            yarn lint
