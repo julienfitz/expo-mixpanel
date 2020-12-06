@@ -1,6 +1,6 @@
 version: 2.1
 jobs:
-  node:
+  build:
     working_directory: ~/expo-mixpanel
     docker:
       - image: cimg/node:12.16
