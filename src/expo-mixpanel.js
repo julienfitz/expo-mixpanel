@@ -20,7 +20,7 @@ export default class ExpoMixpanel {
   }
 
   /**
-   * Sets initial Artemis user, facility, and organization properties in Mixpanel.
+   * Sets initial properties.
    *
    * @method init
    * @public
