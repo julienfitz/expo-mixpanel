@@ -1,73 +1,15 @@
 # Javascript Node CircleCI 2.1 configuration file
 #
-# Check https://circleci.com/docs/2.1/language-javascript/ for more details
+# Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
 version: 2.1
 jobs:
-  checkout_git:
-    docker:
-      - image: circleci/node:12.18.3
-    working_directory: ~/circleci-expo-mixpanel
+  build:
     steps:
-      - restore_cache:
-          name: Checkout Code
-          key: git-source-other-{{ .Branch }}-{{ .Revision }}
       - checkout
-      - save_cache:
-          key: git-source-other-{{ .Branch }}-{{ .Revision }}
-          paths:
-            - ".git"
-
-  yarn_install:
-    docker:
-      - image: circleci/node:12.18.3
-    working_directory: ~/circleci-expo-mixpanel
-    steps:
-      - restore_cache:
-          name: Checkout Code
-          key: git-source-{{ .Branch }}-{{ .Revision }}
-      - checkout
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - yarn-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - yarn-dependencies-
-      - run: yarn install
-      - save_cache:
-          paths:
-            - node_modules
-          key: yarn-dependencies-{{ checksum "package.json" }}
-
-  yarn_test:
-    docker:
-      - image: circleci/node:12.18.3
-    working_directory: ~/circleci-portal-mobile
-    steps:
-      - restore_cache:
-          name: Checkout Code
-          key: git-source-{{ .Branch }}-{{ .Revision }}
-      - checkout
-      - restore_cache:
-          name: Yarn test
-          keys:
-          - yarn-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - yarn-dependencies-
-
-      # NOTE: Running with --runInBand option to deal with memory issues
-      # https://github.com/facebook/jest/issues/3630
-      - run: node node_modules/jest/bin/jest.js --runInBand --updateSnapshot
-
-workflows:
-  version: 2.1
-  run_tests:
-    jobs:
-      - checkout_git
-      - yarn_install:
-          requires:
-            - checkout_git
-      - yarn_test:
-          requires:
-            - checkout_git
-            - yarn_install
+      - run:
+        name: yarn install
+        command: yarn install
+      - run:
+        name: yarn test
+        command: yarn test
