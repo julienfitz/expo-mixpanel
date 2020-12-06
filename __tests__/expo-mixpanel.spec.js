@@ -1,4 +1,3 @@
-/* global fetch */
 import ExpoMixpanel from '../src/expo-mixpanel'
 import Constants from 'expo-constants'
 
@@ -50,12 +49,13 @@ describe('Mixpanel', () => {
               platform: 'ios',
               screen_size: '750x1334',
               token: 'random-token-string',
-              user_agent: undefined,
+              user_agent: undefined
             }
           },
           'create-identity',
           'track'
-      )})
+        )
+      })
 
       it('correctly sets userId', () => {
         const newId = 456

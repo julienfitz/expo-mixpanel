@@ -1,5 +1,3 @@
-import mockFetch from 'jest-fetch-mock'
-
 jest.mock('expo-constants', () => {
     const Constants = {
       statusBarHeight: 5,
@@ -23,5 +21,5 @@ jest.mock('expo-constants', () => {
 
     Constants.getWebViewUserAgentAsync = jest.fn()
 
-    return Constants;
+    return Constants
 })
