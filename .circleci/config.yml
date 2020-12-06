@@ -1,15 +1,32 @@
-# Javascript Node CircleCI 2.1 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-#
 version: 2.1
 jobs:
-  build:
+  node:
+    working_directory: ~/expo-mixpanel
+    docker:
+      - image: cimg/node:12.16
+
     steps:
       - checkout
+
+      - restore_cache:
+          key: yarn-v1-{{ checksum "yarn.lock" }}-{{ arch }}
+
+      - restore_cache:
+          key: node-v1-{{ checksum "package.json" }}-{{ arch }}
+
+      - run: yarn install
+
+      - save_cache:
+          key: yarn-v1-{{ checksum "yarn.lock" }}-{{ arch }}
+          paths:
+            - ~/.cache/yarn
+
+      - save_cache:
+          key: node-v1-{{ checksum "package.json" }}-{{ arch }}
+          paths:
+            - node_modules
+
       - run:
-        name: yarn install
-        command: yarn install
-      - run:
-        name: yarn test
-        command: yarn test
+          name: jest tests
+          command: |
+            yarn test
