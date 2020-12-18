@@ -229,4 +229,47 @@ describe('Mixpanel', () => {
       })
     })
   })
+
+  describe('._fakeMixpanel', () => {
+    let mixpanelTracker
+    beforeAll(() => {
+      mixpanelTracker = new ExpoMixpanel('random-token-string')
+    })
+
+    it('does not console.log in the test environment', () => {
+      console.log = jest.fn()
+      mixpanelTracker._fakeMixpanel()
+      expect(console.log).not.toHaveBeenCalled()
+    })
+
+    it('does console.log outside of the test environment', () => {
+      process.env.NODE_ENV = 'development'
+      console.log = jest.fn()
+      mixpanelTracker._fakeMixpanel()
+      expect(console.log).toHaveBeenCalled()
+      process.env.NODE_ENV = 'test'
+    })
+  })
+
+  describe('.init', () => {
+    describe('ios', () => {
+      it('correctly sets the platform to ios', async () => {
+        await mixpanelTracker.init()
+        expect(mixpanelTracker.platform).toBe('ios')
+      })
+    })
+
+    describe('android', () => {
+      it('correctly sets the platform to android', async () => {
+        jest.mock('react-native/Libraries/Utilities/Platform', () => {
+          return {
+            OS: 'Google'
+          }
+        })
+
+        await mixpanelTracker.init()
+        expect(mixpanelTracker.platform).toBe('android')
+      })
+    })
+  })
 })
