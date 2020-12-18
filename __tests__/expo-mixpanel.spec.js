@@ -15,17 +15,17 @@ describe('Mixpanel', () => {
     })
 
     describe('.track', () => {
-      it('prints an error to the console if an invalid operation is used', async () => {
+      it('logs error message to the console if an invalid operation is used', async () => {
         const error =
           '\'nonexistent-operation\' is not a valid Mixpanel operation for the track endpoint. This operation will not be tracked.'
-        console.error = jest.fn()
-        mixpanelTracker.track('Event Name', { one: 1 }, 'nonexistent-operation')
-        expect(console.error).toHaveBeenCalledWith(error)
+        console.log = jest.fn()
+        mixpanelTracker.track('Event Name', 'nonexistent-operation')
+        expect(console.log).toHaveBeenCalledWith(error)
       })
 
       it('calls _flush', () => {
         mixpanelTracker._flush = jest.fn()
-        mixpanelTracker.track('Event Name', {}, 'live-event')
+        mixpanelTracker.track('Event Name', 'live-event')
         expect(mixpanelTracker._flush).toHaveBeenCalledWith('live-event')
       })
     })
@@ -82,19 +82,19 @@ describe('Mixpanel', () => {
     })
 
     describe('.people', () => {
-      it('throws a console error if userId is not defined', () => {
+      it('console logs if userId is not defined', () => {
         const error = 'userId not found. profile-set will not be tracked in Mixpanel.'
-        console.error = jest.fn()
+        console.log = jest.fn()
         mixpanelTracker.identify(null)
         mixpanelTracker.people('profile-set', {})
-        expect(console.error).toHaveBeenCalledWith(error)
+        expect(console.log).toHaveBeenCalledWith(error)
       })
 
-      it('throws a console error if operation is invalid', () => {
+      it('console logs if operation is invalid', () => {
         const error = '\'invalid-operation\' is not a valid Mixpanel operation for the engage endpoint. This operation will not be tracked.'
-        console.error = jest.fn()
+        console.log = jest.fn()
         mixpanelTracker.people('invalid-operation', {})
-        expect(console.error).toHaveBeenCalledWith(error)
+        expect(console.log).toHaveBeenCalledWith(error)
       })
 
       it('calls _push with correct arguments', () => {
@@ -112,19 +112,19 @@ describe('Mixpanel', () => {
     })
 
     describe('.group', () => {
-      it('throws a console error if userId is not defined', () => {
+      it('console logs if userId is not defined', () => {
         const error = 'userId not found. group-set will not be tracked in Mixpanel.'
-        console.error = jest.fn()
+        console.log = jest.fn()
         mixpanelTracker.identify(null)
         mixpanelTracker.group('group-set', {})
-        expect(console.error).toHaveBeenCalledWith(error)
+        expect(console.log).toHaveBeenCalledWith(error)
       })
 
-      it('throws a console error if operation is invalid', () => {
+      it('console logs if operation is invalid', () => {
         const error = '\'invalid-operation\' is not a valid Mixpanel operation for the groups endpoint. This operation will not be tracked.'
-        console.error = jest.fn()
+        console.log = jest.fn()
         mixpanelTracker.group('invalid-operation', {})
-        expect(console.error).toHaveBeenCalledWith(error)
+        expect(console.log).toHaveBeenCalledWith(error)
       })
 
       it('calls _push with correct arguments', () => {
@@ -138,6 +138,94 @@ describe('Mixpanel', () => {
           'group-set',
           'groups'
         )
+      })
+    })
+  })
+
+  describe('before .init and with a token', () => {
+    let mixpanelTracker
+
+    beforeEach(() => {
+      mixpanelTracker = new ExpoMixpanel('random-token-string')
+      mixpanelTracker._fakeMixpanel = jest.fn()
+    })
+
+    describe('.track', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.track('Event Name', 'live-event')
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.identify', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.identify(3)
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.reset', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.reset()
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.people', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.people('profile-set', {})
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.group', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.group('group-set', {})
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('before .init and without a token', () => {
+    let mixpanelTracker
+
+    beforeEach(() => {
+      mixpanelTracker = new ExpoMixpanel()
+      mixpanelTracker._fakeMixpanel = jest.fn()
+    })
+
+    describe('.track', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.track('Event Name', 'live-event')
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.identify', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.identify(3)
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.reset', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.reset()
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.people', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.people('profile-set', {})
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
+      })
+    })
+
+    describe('.group', () => {
+      it('calls ._fakeMixpanel', () => {
+        mixpanelTracker.group('group-set', {})
+        expect(mixpanelTracker._fakeMixpanel).toHaveBeenCalled()
       })
     })
   })

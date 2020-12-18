@@ -20,7 +20,7 @@ export default class ExpoMixpanel {
   }
 
   /**
-   * Sets initial properties.
+   * Sets initial properties for use in event parameters.
    *
    * @method init
    * @public
@@ -50,13 +50,17 @@ export default class ExpoMixpanel {
    * Method through which events are tracked in Mixpanel.
    * https://developer.mixpanel.com/reference/events
    *
+   * Example:
+   *
+   * track('page views', 'live-event', { account_number: 1234 })
+   *
    * @method track
-   * @param name {String}
-   * @param props {Object}
-   * @param operation {String}
+   * @param name {String} the name of the event as you'd like it to appear in Mixpanel
+   * @param props {Object} any additional properties you'd like to pass to Mixpanel
+   * @param operation {String} the string that goes after the # in the URL (see reference link above, and VALID_TRACK_OPERATIONS in ./helpers)
    * @public
    */
-  track = (name, props, operation) => {
+  track = (name, operation, props = {}) => {
     if (this.token && this.ready) {
       this.queue.push({
         name,
@@ -106,9 +110,13 @@ export default class ExpoMixpanel {
    * Interface for all user profile operations.
    * https://developer.mixpanel.com/reference/user-profiles
    *
+   * Example:
+   *
+   * people('profile-set', { account_number: 1234 })
+   *
    * @method people
-   * @param operation {String}
-   * @param props {Object}
+   * @param operation {String} the string that goes after the # in the URL (see reference link above, and VALID_PROFILE_OPERATIONS in ./helpers)
+   * @param props {Object} any additional properties you wish to pass to Mixpanel
    * @public
    */
   people = (operation, props) => {
@@ -123,9 +131,13 @@ export default class ExpoMixpanel {
    * Interface for all group operations.
    * https://developer.mixpanel.com/reference/group-profiles
    *
+   * Example:
+   *
+   * group('group-set', { account_number: 1234 })
+   *
    * @method group
-   * @param operation {String}
-   * @param props {Object}
+   * @param operation {String} the string that goes after the # in the URL (see reference link above, and VALID_GROUP_OPERATIONS in ./helpers)
+   * @param props {Object} any additional properties you wish to pass to Mixpanel
    * @public
    */
   group = (operation, props) => {
@@ -141,7 +153,8 @@ export default class ExpoMixpanel {
   /**
    * A no-op method that logs arguments to the console when Mixpanel is unavailable.
    * This could be because we're developing locally, or because for some reason
-   * Mixpanel is not tracking correctly.
+   * Mixpanel is not tracking correctly. Disabled in the test environment
+   * because it's incredibly annoying.
    *
    * @method _fakeMixpanel
    * @private
@@ -154,8 +167,8 @@ export default class ExpoMixpanel {
   }
 
   /**
-   * Empties the event queue, tracks the associated events, and
-   * marks them as `sent`.
+   * Empties the event queue (currently only one event is queued at a time),
+   * tracks the associated events, and marks them as `sent`.
    *
    * @method _flush
    * @param operation {String}
@@ -189,7 +202,7 @@ export default class ExpoMixpanel {
 
       this._push(data, operation, 'engage')
     } else {
-      console.error(`userId not found. ${operation} will not be tracked in Mixpanel.`)
+      console.log(`userId not found. ${operation} will not be tracked in Mixpanel.`)
     }
   }
 
@@ -212,7 +225,7 @@ export default class ExpoMixpanel {
 
       this._push(data, operation, 'groups')
     } else {
-      console.error(`userId not found. ${operation} will not be tracked in Mixpanel.`)
+      console.log(`userId not found. ${operation} will not be tracked in Mixpanel.`)
     }
   }
 
@@ -231,7 +244,7 @@ export default class ExpoMixpanel {
       data = Buffer.from(JSON.stringify(data)).toString('base64')
       return fetch(`${MIXPANEL_API_URL}/${endpoint}#${operation}?data=${data}`)
     } else {
-      console.error(`'${operation}' is not a valid Mixpanel operation for the ${endpoint} endpoint. This operation will not be tracked.`)
+      console.log(`'${operation}' is not a valid Mixpanel operation for the ${endpoint} endpoint. This operation will not be tracked.`)
     }
   }
 
