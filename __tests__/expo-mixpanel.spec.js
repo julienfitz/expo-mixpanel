@@ -249,6 +249,19 @@ describe('Mixpanel', () => {
       expect(console.log).toHaveBeenCalled()
       process.env.NODE_ENV = 'test'
     })
+
+    it('properly console.logs objects and strings', () => {
+      process.env.NODE_ENV = 'development'
+      console.log = jest.fn()
+      mixpanelTracker._fakeMixpanel('fake-operation', 'cool', { thing: 'yes' })
+      expect(console.log).toHaveBeenCalledWith(
+        'Not sent to Mixpanel: ',
+        'fake-operation',
+        'cool',
+        { thing: 'yes' }
+      )
+      process.env.NODE_ENV = 'test'
+    })
   })
 
   describe('.init', () => {

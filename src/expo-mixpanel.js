@@ -5,18 +5,24 @@ import Constants from 'expo-constants'
 import { Buffer } from 'buffer'
 import {
   MIXPANEL_API_URL,
+  NO_TOKEN_MESSAGE,
   VALID_OPERATIONS
 } from './helpers'
 
 const { width, height } = Dimensions.get('window')
 
-// originally copied from/based on https://github.com/codekadiya/expo-mixpanel-analytics
+// completely re-written but originally inspired by:
+// https://github.com/codekadiya/expo-mixpanel-analytics
 export default class ExpoMixpanel {
   constructor (token) {
-    this.ready = false
-    this.queue = []
-    this.token = token
-    this.userId = null
+    if (token) {
+      this.ready = false
+      this.queue = []
+      this.token = token
+      this.userId = null
+    } else {
+      console.log(NO_TOKEN_MESSAGE)
+    }
   }
 
   /**
@@ -26,24 +32,28 @@ export default class ExpoMixpanel {
    * @public
    */
   init = async () => {
-    this.clientId = Constants.deviceId
-    this.userId = this.clientId
-    const userAgent = await Constants.getWebViewUserAgentAsync()
-    this.userAgent = userAgent
-    this.appName = Constants.manifest.name
-    this.appId = Constants.manifest.slug
-    this.appVersion = Constants.manifest.version
-    this.screenSize = `${width}x${height}`
-    this.deviceName = Constants.deviceName
-    if (Platform.OS === 'ios') {
-      this.platform = Constants.platform.ios.platform
-      this.model = Constants.platform.ios.model
-      this.osVersion = Constants.platform.ios.systemVersion
-    } else {
-      this.platform = 'android'
-    }
+    if (this.token) {
+      this.clientId = Constants.deviceId
+      this.userId = this.clientId
+      const userAgent = await Constants.getWebViewUserAgentAsync()
+      this.userAgent = userAgent
+      this.appName = Constants.manifest.name
+      this.appId = Constants.manifest.slug
+      this.appVersion = Constants.manifest.version
+      this.screenSize = `${width}x${height}`
+      this.deviceName = Constants.deviceName
+      if (Platform.OS === 'ios') {
+        this.platform = Constants.platform.ios.platform
+        this.model = Constants.platform.ios.model
+        this.osVersion = Constants.platform.ios.systemVersion
+      } else {
+        this.platform = 'android'
+      }
 
-    this.ready = true
+      this.ready = true
+    } else {
+      this._fakeMixpanel('init', NO_TOKEN_MESSAGE)
+    }
   }
 
   /**
@@ -68,7 +78,7 @@ export default class ExpoMixpanel {
       })
       this._flush(operation)
     } else {
-      this._fakeMixpanel(`track: ${name}, ${props}`)
+      this._fakeMixpanel(`track: ${name}`, props)
     }
   }
 
@@ -123,7 +133,7 @@ export default class ExpoMixpanel {
     if (this.token && this.ready) {
       this._people(operation, props)
     } else {
-      this._fakeMixpanel(`${operation}: ${props}`)
+      this._fakeMixpanel(`${operation}:`, props)
     }
   }
 
@@ -144,7 +154,7 @@ export default class ExpoMixpanel {
     if (this.token && this.ready) {
       this._group(operation, props)
     } else {
-      this._fakeMixpanel(`${operation}: ${props}`)
+      this._fakeMixpanel(`${operation}:`, props)
     }
   }
 
@@ -163,6 +173,7 @@ export default class ExpoMixpanel {
   _fakeMixpanel = (...messages) => {
     if (process.env.NODE_ENV !== 'test') {
       console.log('Not sent to Mixpanel: ', ...messages)
+      console.log('HINTS: Provide a valid Mixpanel token. Call the .init() method before any others.')
     }
   }
 
