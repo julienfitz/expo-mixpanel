@@ -1,7 +1,7 @@
 import ExpoMixpanel from '../src/expo-mixpanel'
 import Constants from 'expo-constants'
 
-describe('Mixpanel', () => {
+describe('ExpoMixpanel', () => {
   let mixpanelTracker
 
   beforeEach(async () => {
